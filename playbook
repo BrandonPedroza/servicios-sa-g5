@@ -1,0 +1,192 @@
+- hosts: all
+  
+  become: yes
+
+  vars:
+    - homeDir: /home/
+    - appDir : app
+    - repo: servicios-sa-g5
+    - account: BrandonPedroza
+    - privateKey:  /var/lib/jenkins/.ssh/id_rsa
+
+
+  tasks:
+
+  - name: npm package
+    apt:
+      name: npm
+      update_cache: yes 
+      state: latest
+  
+  - name: git package
+    apt:
+      name: git 
+      update_cache: yes 
+      state: latest
+  
+  - name: mcrypt package
+    apt:
+      name: mcrypt 
+      update_cache: yes 
+      state: latest
+  
+  - name: curl package
+    apt:
+      name: curl 
+      update_cache: yes 
+      state: latest
+  
+
+  - name: Install pm2
+    npm: name=pm2 global=yes production=yes
+
+  - name: Create APP Directory
+    file: path={{homeDir}}/{{appDir}} state=directory
+
+  - name: Copy Private Key
+    copy: src={{privateKey}} dest={{homeDir}} mode=0600
+
+  - name: Git Clone Repo
+    git:
+     repo: https://github.com/BrandonPedroza/servicios-sa-g5.git
+     dest: /home/{{appDir}}
+     clone: yes
+     update: yes
+    register: git_finished
+
+  - name: Running NPM install servicio agregar tarjeta
+    npm: path={{homeDir}}/{{appDir}}/AgregarTarjeta
+    register: npm_finished
+    when: git_finished.changed
+
+  - name: Stop APP servicio agregar tarjeta
+    command: pm2 stop app chdir={{homeDir}}/{{appDir}}/AgregarTarjeta
+    ignore_errors: yes
+
+  - name: Start APP servicio agregar tarjeta
+    command: pm2 start index.js --name app chdir={{homeDir}}/{{appDir}}/AgregarTarjeta
+    ignore_errors: yes
+    
+  - name: Running NPM install servicio carrito
+    npm: path={{homeDir}}/{{appDir}}/Carrito
+    register: npm_finished
+    when: git_finished.changed
+
+  - name: Stop APP servicio carrito
+    command: pm2 stop app chdir={{homeDir}}/{{appDir}}/Carrito
+    ignore_errors: yes
+
+  - name: Start APP servicio carrito
+    command: pm2 start index.js --name app chdir={{homeDir}}/{{appDir}}/Carrito
+    ignore_errors: yes
+
+
+
+  - name: Running NPM install LOGIN
+    npm: path={{homeDir}}/{{appDir}}/Login
+    register: npm_finished
+    when: git_finished.changed
+
+  - name: Stop APP servicio LOGIN
+    command: pm2 stop app chdir={{homeDir}}/{{appDir}}/Login
+    ignore_errors: yes
+
+  - name: Start APP servicio LOGIN
+    command: pm2 start index.js --name app chdir={{homeDir}}/{{appDir}}/Login
+    ignore_errors: yes
+    
+
+
+  - name: Running NPM install MODIFICACION USUARIOS
+    npm: path={{homeDir}}/{{appDir}}/ModificacionUsuarios
+    register: npm_finished
+    when: git_finished.changed
+
+  - name: Stop APP servicio MODIFICACION USUARIOS
+    command: pm2 stop app chdir={{homeDir}}/{{appDir}}/ModificacionUsuarios
+    ignore_errors: yes
+
+  - name: Start APP servicio MODIFICACION USUARIOS
+    command: pm2 start index.js --name app chdir={{homeDir}}/{{appDir}}/ModificacionUsuarios
+    ignore_errors: yes
+    
+
+  - name: Running NPM install ORDENES
+    npm: path={{homeDir}}/{{appDir}}/Ordenes
+    register: npm_finished
+    when: git_finished.changed
+
+  - name: Stop APP servicio ORDENES
+    command: pm2 stop app chdir={{homeDir}}/{{appDir}}/Ordenes
+    ignore_errors: yes
+
+  - name: Start APP servicio ORDENES
+    command: pm2 start index.js --name app chdir={{homeDir}}/{{appDir}}/Ordenes
+    ignore_errors: yes
+    
+
+
+  - name: Running NPM install REGISTRO CATEGORIA
+    npm: path={{homeDir}}/{{appDir}}/RegistroCategorias
+    register: npm_finished
+    when: git_finished.changed
+
+  - name: Stop APP servicio REGISTRO CATEGORIA
+    command: pm2 stop app chdir={{homeDir}}/{{appDir}}/RegistroCategorias
+    ignore_errors: yes
+
+  - name: Start APP servicio REGISTRO CATEGORIA
+    command: pm2 start index.js --name app chdir={{homeDir}}/{{appDir}}/RegistroCategorias
+    ignore_errors: yes
+    
+
+
+  - name: Running NPM install REGISTRO CLIENTES
+    npm: path={{homeDir}}/{{appDir}}/RegistroClientes
+    register: npm_finished
+    when: git_finished.changed
+
+  - name: Stop APP servicio REGISTRO CLIENTES
+    command: pm2 stop app chdir={{homeDir}}/{{appDir}}/RegistroClientes
+    ignore_errors: yes
+
+  - name: Start APP servicio REGISTRO CLIENTES
+    command: pm2 start index.js --name app chdir={{homeDir}}/{{appDir}}/RegistroClientes
+    ignore_errors: yes
+    
+
+
+  - name: Running NPM install REGISTRO PRODUCTOS
+    npm: path={{homeDir}}/{{appDir}}/RegistroProductos
+    register: npm_finished
+    when: git_finished.changed
+
+  - name: Stop APP servicio REGISTRO PRODUCTOS
+    command: pm2 stop app chdir={{homeDir}}/{{appDir}}/RegistroProductos
+    ignore_errors: yes
+
+  - name: Start APP servicio REGISTRO PRODUCTOS
+    command: pm2 start index.js --name app chdir={{homeDir}}/{{appDir}}/RegistroProductos
+    ignore_errors: yes
+    
+
+
+  - name: Running NPM install REGISTRO PROVEEDORES
+    npm: path={{homeDir}}/{{appDir}}/RegistroProveedores
+    register: npm_finished
+    when: git_finished.changed
+
+  - name: Stop APP servicio REGISTRO PROVEEDORES
+    command: pm2 stop app chdir={{homeDir}}/{{appDir}}/RegistroProveedores
+    ignore_errors: yes
+
+  - name: Start APP servicio REGISTRO PROVEEDORES
+    command: pm2 start index.js --name app chdir={{homeDir}}/{{appDir}}/RegistroProveedores
+    ignore_errors: yes
+    
+
+
+
+
+
+

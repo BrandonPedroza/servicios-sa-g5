@@ -1,0 +1,287 @@
+
+variables:
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+  GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+
+
+stages:
+#    - sonar
+    - release   #CD - Continuos Delivery
+    - deploy    #despliegue servicio agregartarjeta
+    - deploy2   #despliegue servicio login
+    - deploy3   #despliegue servicio modiicar usuario
+    - deploy4   #despliegue servicio registrocateorias
+    - deploy5   #despliegue servicio registroclientes
+    - deploy6   #despliegue servicio registroproductos
+    - deploy7   #despliegue servicio registroproveedores
+    - deploy8   #despliegue servicio carrito
+    - deploy9   #despliegue sercicio ordenes
+
+    
+
+#sonarcloud-check:
+#    stage: sonar
+#    image:
+#        name: sonarsource/sonar-scanner-cli:latest
+#        entrypoint: [""]
+#    cache:
+#        key: "${CI_JOB_NAME}"
+#        paths:
+#            - .sonar/cache
+#    script:
+#        - sonar-scanner
+#    only:
+#        - merge_requests
+#        - master
+#        - develop
+
+
+
+
+release:
+    stage: release
+    image: docker:latest
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    tags:
+        - backend #son los tags que ingresamos al momento del registro del runner
+    variables:
+        DOCKER_REGISTRY: "docker.io"
+        DOCKER_TLS_CERTDIR: "/certs"
+    script:
+        #AGREGAR TARJETA
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker build -t "fiusac/agregartarjeta:latest" ./AgregarTarjeta/
+        - docker push "fiusac/agregartarjeta:latest"
+        # SERVICIO LOGIN
+        - docker build -t "fiusac/login:latest" ./Login/
+        - docker push "fiusac/login:latest"
+        # SERVICIO MODIFICAR USUARIO
+        - docker build -t "fiusac/modificacionusuarios:latest" ./ModificacionUsuarios/
+        - docker push "fiusac/modificacionusuarios:latest"
+        # SERVICIO REGISTRO CATEGORIAS
+        - docker build -t "fiusac/registrocategorias:latest" ./RegistroCategorias/
+        - docker push "fiusac/registrocategorias:latest"
+        # SERVICIO REGISTRO CLIENTES
+        - docker build -t "fiusac/registroclientes:latest" ./RegistroClientes/
+        - docker push "fiusac/registroclientes:latest"
+        # SERVICIO REGISTRO PRODUCTOS
+        - docker build -t "fiusac/registroproductos:latest" ./RegistroProductos/
+        - docker push "fiusac/registroproductos:latest"
+        # SERVICIO REGISTRO PROVEEDORES
+        - docker build -t "fiusac/registroproveedores:latest" ./RegistroProveedores/
+        - docker push "fiusac/registroproveedores:latest"
+        # SERVICIO ORDENES
+        - docker build -t "fiusac/ordenes:latest" ./Ordenes/
+        - docker push "fiusac/ordenes:latest"
+        # SERVICIO CARRITO
+        - docker build -t "fiusac/carrito:latest" ./Carrito/
+        - docker push "fiusac/carrito:latest"
+        
+        
+    after_script:
+        - docker logout
+
+
+deploy:
+    stage: deploy
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    image: docker:latest
+    environment:
+        name: production
+        url: http://34.125.95.83:3006/ # indicamos la ruta y puerto en el cual sera publicado al finalizar
+    tags:
+        - backend # son los tags que ingresamos al momento del registro del runner
+    before_script: # si ya contamos con el container ejecutando, lo usamos para detenerlo
+        - docker stop agregartarjeta #detener la ejecucion "Taller es el nombre del container"
+        - docker rm agregartarjeta #eliminar el container
+    script:
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker pull "fiusac/agregartarjeta:latest" #descargamos la imagen a nuestro Docker
+        - docker run -d -p 0.0.0.0:3006:3006 --name=agregartarjeta fiusac/agregartarjeta:latest #corremos el container especificando el localhost y el puerto en el que sera publicado y el puerto que estaremos escuchando dentro del containerafter_script
+        - docker image prune
+        - docker logout
+
+# SERVICIO LOGIN
+deploy2:
+    stage: deploy2
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    image: docker:latest
+    environment:
+        name: production
+        url: http://34.125.95.83:3005/ # indicamos la ruta y puerto en el cual sera publicado al finalizar
+    tags:
+        - backend # son los tags que ingresamos al momento del registro del runner
+    before_script: # si ya contamos con el container ejecutando, lo usamos para detenerlo
+        - docker stop login #detener la ejecucion "Taller es el nombre del container"
+        - docker rm login #eliminar el container
+    script:
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker pull "fiusac/login:latest" #descargamos la imagen a nuestro Docker
+        - docker run -d -p 0.0.0.0:3005:3005 --name=login fiusac/login:latest #corremos el container especificando el localhost y el puerto en el que sera publicado y el puerto que estaremos escuchando dentro del containerafter_script
+        - docker image prune
+        - docker logout
+
+# SERVICIO MODIFICAR USUARIO
+deploy3:
+    stage: deploy3
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    image: docker:latest
+    environment:
+        name: production
+        url: http://34.125.95.83:3004/ # indicamos la ruta y puerto en el cual sera publicado al finalizar
+    tags:
+        - backend # son los tags que ingresamos al momento del registro del runner
+    before_script: # si ya contamos con el container ejecutando, lo usamos para detenerlo
+        - docker stop modificacionusuarios #detener la ejecucion "Taller es el nombre del container"
+        - docker rm modificacionusuarios #eliminar el container
+    script:
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker pull "fiusac/modificacionusuarios:latest" #descargamos la imagen a nuestro Docker
+        - docker run -d -p 0.0.0.0:3004:3004 --name=modificacionusuarios fiusac/modificacionusuarios:latest #corremos el container especificando el localhost y el puerto en el que sera publicado y el puerto que estaremos escuchando dentro del containerafter_script
+        - docker image prune
+        - docker logout
+
+# SERVICIO REGISTRO CATEGORIAS
+deploy4:
+    stage: deploy4
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    image: docker:latest
+    environment:
+        name: production
+        url: http://34.125.95.83:3003/ # indicamos la ruta y puerto en el cual sera publicado al finalizar
+    tags:
+        - backend # son los tags que ingresamos al momento del registro del runner
+    before_script: # si ya contamos con el container ejecutando, lo usamos para detenerlo
+        - docker stop registrocategorias #detener la ejecucion "Taller es el nombre del container"
+        - docker rm registrocategorias #eliminar el container
+    script:
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker pull "fiusac/registrocategorias:latest" #descargamos la imagen a nuestro Docker
+        - docker run -d -p 0.0.0.0:3003:3003 --name=registrocategorias fiusac/registrocategorias:latest #corremos el container especificando el localhost y el puerto en el que sera publicado y el puerto que estaremos escuchando dentro del containerafter_script
+        - docker image prune
+        - docker logout
+
+
+
+        
+# SERVICIO REGISTRO CLIENTES
+deploy5:
+    stage: deploy5
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    image: docker:latest
+    environment:
+        name: production
+        url: http://34.125.95.83:3000/ # indicamos la ruta y puerto en el cual sera publicado al finalizar
+    tags:
+        - backend # son los tags que ingresamos al momento del registro del runner
+    before_script: # si ya contamos con el container ejecutando, lo usamos para detenerlo
+        - docker stop registroclientes #detener la ejecucion "Taller es el nombre del container"
+        - docker rm registroclientes #eliminar el container
+    script:
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker pull "fiusac/registroclientes:latest" #descargamos la imagen a nuestro Docker
+        - docker run -d -p 0.0.0.0:3000:3000 --name=registroclientes fiusac/registroclientes:latest #corremos el container especificando el localhost y el puerto en el que sera publicado y el puerto que estaremos escuchando dentro del containerafter_script
+        - docker image prune
+        - docker logout
+
+
+
+# SERVICIO REGISTRO PRODUCTOS
+deploy6:
+    stage: deploy6
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    image: docker:latest
+    environment:
+        name: production
+        url: http://34.125.95.83:3001/ # indicamos la ruta y puerto en el cual sera publicado al finalizar
+    tags:
+        - backend # son los tags que ingresamos al momento del registro del runner
+    before_script: # si ya contamos con el container ejecutando, lo usamos para detenerlo
+        - docker stop registroproductos #detener la ejecucion "Taller es el nombre del container"
+        - docker rm registroproductos #eliminar el container
+    script:
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker pull "fiusac/registroproductos:latest" #descargamos la imagen a nuestro Docker
+        - docker run -d -p 0.0.0.0:3001:3001 --name=registroproductos fiusac/registroproductos:latest #corremos el container especificando el localhost y el puerto en el que sera publicado y el puerto que estaremos escuchando dentro del containerafter_script
+        - docker image prune
+        - docker logout
+
+
+
+
+# SERVICIO REGISTRO PROVEEDORES
+deploy7:
+    stage: deploy7
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    image: docker:latest
+    environment:
+        name: production
+        url: http://34.125.95.83:3002/ # indicamos la ruta y puerto en el cual sera publicado al finalizar
+    tags:
+        - backend # son los tags que ingresamos al momento del registro del runner
+    before_script: # si ya contamos con el container ejecutando, lo usamos para detenerlo
+        - docker stop registroproveedores #detener la ejecucion "Taller es el nombre del container"
+        - docker rm registroproveedores #eliminar el container
+    script:
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker pull "fiusac/registroproveedores:latest" #descargamos la imagen a nuestro Docker
+        - docker run -d -p 0.0.0.0:3002:3002 --name=registroproveedores fiusac/registroproveedores:latest #corremos el container especificando el localhost y el puerto en el que sera publicado y el puerto que estaremos escuchando dentro del containerafter_script
+        - docker image prune
+        - docker logout
+
+# SERVICIO CARRITO
+deploy8:
+    stage: deploy8
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    image: docker:latest
+    environment:
+        name: production
+        url: http://34.125.95.83:3010/ # indicamos la ruta y puerto en el cual sera publicado al finalizar
+    tags:
+        - backend # son los tags que ingresamos al momento del registro del runner
+    before_script: # si ya contamos con el container ejecutando, lo usamos para detenerlo
+        - docker stop carrito #detener la ejecucion "Taller es el nombre del container"
+        - docker rm carrito #eliminar el container
+    script:
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker pull "fiusac/carrito:latest" #descargamos la imagen a nuestro Docker
+        - docker run -d -p 0.0.0.0:3010:3010 --name=carrito fiusac/carrito:latest #corremos el container especificando el localhost y el puerto en el que sera publicado y el puerto que estaremos escuchando dentro del containerafter_script
+        - docker image prune
+        - docker logout
+
+
+
+# SERVICIO ORDENES
+deploy9:
+    stage: deploy9
+    only:
+        - "main" #indica en que rama se va a ejecutar al momento de un commit o merge 
+    image: docker:latest
+    environment:
+        name: production
+        url: http://34.125.95.83:3007/ # indicamos la ruta y puerto en el cual sera publicado al finalizar
+    tags:
+        - backend # son los tags que ingresamos al momento del registro del runner
+    #before_script: # si ya contamos con el container ejecutando, lo usamos para detenerlo
+    #    - docker stop ordenes #detener la ejecucion "Taller es el nombre del container"
+    #    - docker rm ordenes #eliminar el container
+    script:
+        - docker login -u ${DOCKERHUB_USER} -p ${DOCKERHUB_KEY}
+        - docker pull "fiusac/ordenes:latest" #descargamos la imagen a nuestro Docker
+        - docker run -d -p 0.0.0.0:3007:3007 --name=ordenes fiusac/ordenes:latest #corremos el container especificando el localhost y el puerto en el que sera publicado y el puerto que estaremos escuchando dentro del containerafter_script
+        - docker image prune
+        - docker logout
+
+
+
+
+
